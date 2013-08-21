@@ -32,7 +32,7 @@ var lat,lng;
 
         var map = new google.maps.Map(document.getElementById('map'), {
           center: new google.maps.LatLng(lat, lng),
-          zoom: 16,
+          zoom: 15,
           mapTypeId: google.maps.MapTypeId.ROADMAP
         });
 
@@ -65,7 +65,7 @@ var lat,lng;
 	
 function showResults() {
 	console.log("Entering showResults()");
-	$.getJSON("https://www.googleapis.com/fusiontables/v1/query?sql=SELECT * FROM 1Rd6n3I6jogBxx_1Mgy2xi8SdJQwHcnvahcrmKSk ORDER BY ST_DISTANCE(latitude, LATLNG(" + lat + "," + lng + ")) LIMIT 3&key=AIzaSyCSjvPQXDkjxppQfiaiPFfl0HwprmUndKM&typed=false",function(result) {
+	$.getJSON("https://www.googleapis.com/fusiontables/v1/query?sql=SELECT * FROM 1Rd6n3I6jogBxx_1Mgy2xi8SdJQwHcnvahcrmKSk ORDER BY ST_DISTANCE(latitude, LATLNG(" + lat + "," + lng + ")) LIMIT 3&key=AIzaSyCSjvPQXDkjxppQfiaiPFfl0HwprmUndKM",function(result) {
 
     	console.log(result);
         /* Callback function. */
