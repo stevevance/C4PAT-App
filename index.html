@@ -41,7 +41,7 @@ var lat,lng;
               select: 'address',
               from: '1JH1KGq21JVspn91ldtz7z3TD4zHKvu6o2QgLssk',
               orderBy: 'ST_DISTANCE(address, LATLNG(' + lat + ',' + lng + '))',
- //             limit: 3
+              limit: 10
          }
        });
          layer.setMap(map);
@@ -65,7 +65,7 @@ var lat,lng;
 	
 function showResults() {
 	console.log("Entering showResults()");
-	$.getJSON("https://www.googleapis.com/fusiontables/v1/query?sql=SELECT * FROM 1JH1KGq21JVspn91ldtz7z3TD4zHKvu6o2QgLssk ORDER BY ST_DISTANCE(address, LATLNG(" + lat + "," + lng + ")) LIMIT 10&key=AIzaSyCSjvPQXDkjxppQfiaiPFfl0HwprmUndKM",function(result) {
+	$.getJSON("https://www.googleapis.com/fusiontables/v1/query?sql=SELECT * FROM 1JH1KGq21JVspn91ldtz7z3TD4zHKvu6o2QgLssk ORDER BY ST_DISTANCE(address, LATLNG(" + lat + "," + lng + ")) LIMIT 10&key=AIzaSyCSjvPQXDkjxppQfiaiPFfl0HwprmUndKM&typed=false",function(result) {
 
     	console.log(result);
     	var print ="";
@@ -102,6 +102,7 @@ function showResults() {
    <ul data-role="listview" data-inset="true">
 	   <li>What is Permaculture?</li>
 	   <li>What is Appropriate Technology?</li>
+	   <li>Living Building Challenge</li>
    </ul>
 	</div>
   </div>
