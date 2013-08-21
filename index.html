@@ -4,7 +4,7 @@
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
     <meta charset="UTF-8">
 
-    <title>Find the nearest Centers of Permaculture and Appropriate Technology</title>
+    <title>Find where people are doing permaculture and appropriate technology</title>
 		<link rel="stylesheet" href="styles/styles.css" />
 		<link rel="stylesheet" href="styles/jquery.mobile-1.3.2.min.css" />
 		<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
@@ -28,7 +28,7 @@ var lat,lng;
       	lat = e.coords.latitude;
       	lng = e.coords.longitude;
       	
-      	console.log("https://www.googleapis.com/fusiontables/v1/query?sql=SELECT * FROM 1Rd6n3I6jogBxx_1Mgy2xi8SdJQwHcnvahcrmKSk ORDER BY ST_DISTANCE(latitude, LATLNG(" + lat + "," + lng + "))&key=AIzaSyCSjvPQXDkjxppQfiaiPFfl0HwprmUndKM");
+      	console.log("https://www.googleapis.com/fusiontables/v1/query?sql=SELECT * FROM 1JH1KGq21JVspn91ldtz7z3TD4zHKvu6o2QgLssk ORDER BY ST_DISTANCE(address, LATLNG(" + lat + "," + lng + "))&key=AIzaSyCSjvPQXDkjxppQfiaiPFfl0HwprmUndKM");
 
         var map = new google.maps.Map(document.getElementById('map'), {
           center: new google.maps.LatLng(lat, lng),
@@ -38,8 +38,8 @@ var lat,lng;
 
         var layer = new google.maps.FusionTablesLayer({
             query: {
-              select: 'latitude',
-              from: '1Rd6n3I6jogBxx_1Mgy2xi8SdJQwHcnvahcrmKSk',
+              select: 'address',
+              from: '1JH1KGq21JVspn91ldtz7z3TD4zHKvu6o2QgLssk',
               orderBy: 'ST_DISTANCE(address, LATLNG(' + lat + ',' + lng + '))',
  //             limit: 3
          }
@@ -65,18 +65,23 @@ var lat,lng;
 	
 function showResults() {
 	console.log("Entering showResults()");
-	$.getJSON("https://www.googleapis.com/fusiontables/v1/query?sql=SELECT * FROM 1Rd6n3I6jogBxx_1Mgy2xi8SdJQwHcnvahcrmKSk ORDER BY ST_DISTANCE(latitude, LATLNG(" + lat + "," + lng + ")) LIMIT 3&key=AIzaSyCSjvPQXDkjxppQfiaiPFfl0HwprmUndKM",function(result) {
+	$.getJSON("https://www.googleapis.com/fusiontables/v1/query?sql=SELECT * FROM 1JH1KGq21JVspn91ldtz7z3TD4zHKvu6o2QgLssk ORDER BY ST_DISTANCE(address, LATLNG(" + lat + "," + lng + ")) LIMIT 10&key=AIzaSyCSjvPQXDkjxppQfiaiPFfl0HwprmUndKM",function(result) {
 
     	console.log(result);
+    	var print ="";
         /* Callback function. */
         //alert(typeof result);
         $('#list').slideDown();
         $('#list_results').html('');
-        var print;
+
         $.each(result.rows, function(i, row) {
         	console.log(row);
-	        $('#list_results').append('<li data-filtertext="">' + row[6] + '</li>');
+	        $('#list_results').append('<li data-filtertext=""><h3>' + row[0] + '</h3><p>' + row[4] + '</p></li>');
+	        
+	        print += "<div data-role='collapsible' data-content-theme='c'><h3>" + row[0] + "</h3><p>" + row[4] + "</p></div>";
+	        
         });
+        //$('#list_blocks').html(print);
         $("#list_results").listview ("refresh");
     });
 }
@@ -86,12 +91,12 @@ function showResults() {
   <div data-role="page" id="home_page">
 	<div data-role="content">
   <h1>Permaculture and Appropriate Technology</h1>
-  <h2>Nearest centers</h2>
+  <h2>Who's doing it?</h2>
     <div id="map"></div>
    <div id='list'>
-   <h2>List</h2>
    <ul data-role="listview" data-inset="true" id="list_results">
    </ul>
+   <div id='list_blocks'></div>
    </div>
    <h2>Info</h2>
    <ul data-role="listview" data-inset="true">
