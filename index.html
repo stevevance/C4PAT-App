@@ -43,6 +43,7 @@ var radius_miles = 25; // in miles
 var radius;
 var limit = 5;
 var results;
+var layer;
 //
 		
 function onLocationFound(e) {
@@ -197,9 +198,14 @@ function zoomToMarker(layer) {
 		//$("#loading_messages").html("Zooming to " + layer.options.title);
 		window.scrollTo(0, 0);
 		
+		layer = layer;
+		
 		console.log("zoomToMarker: zooming to " + layer.options.title);
+		console.log(layer._latlng.lat);
 		layer.openPopup();
-		map.setZoom(maxzoom-2);
+		setTimeout(function(){
+			map.setView([layer._latlng.lat,layer._latlng.lng],maxzoom-2);
+		},500);
 	});	
 }
     </script>
@@ -240,6 +246,11 @@ function zoomToMarker(layer) {
 		<div data-role="collapsible" data-collapsed="true" data-inset="false" id="" class="">
 			<h2>Living Building Challenge</h2>
 			<p>Text</p>
+		</div><!-- // collapsible -->
+		<div data-role="collapsible" data-collapsed="true" data-inset="false" id="" class="">
+			<h2>Contact the creator</h2>
+			<p>Created by <a href='http://stevevance.net'>Steven Vance</a>.</p>
+			<p><a href='http://twitter.com/stevevance'>@stevevance</a></p>
 		</div><!-- // collapsible -->
 	</div>
   </div>
