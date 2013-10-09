@@ -30,12 +30,18 @@
 
 // set global variables
 var lat,lng;
-var markers = new L.MarkerClusterGroup();
+var markers = new L.MarkerClusterGroup({
+	maxClusterRadius: 50
+});
 var mapquest_key = "Fmjtd%7Cluuanu0t21%2C82%3Do5-96bs5w";
 var table = "1nTSNa-UcBIVdAF9KYHQPahaSCPwE0W04WLNDf8M";
 var map, bounds;
 var marker = [];
 var maxzoom = 18;
+var radius_miles = 25; // in miles
+var radius;
+var limit = 5;
+var results;
 //
 		
 function onLocationFound(e) {
@@ -62,9 +68,15 @@ function onLocationFound(e) {
 		}).addTo(map);
 		
 		// add a marker in the given location, attach some popup content to it and open the popup
-		L.marker([lat, lng]).addTo(map)
+		/*
+L.marker([lat, lng]).addTo(map)
 		    .bindPopup("You're here!")
 		    .openPopup();
+*/
+		var popup = L.popup()
+		    .setLatLng([lat, lng])
+		    .setContent("You're here!")
+		    .openOn(map);
 		console.log("onLocationFound: entering showResults() next");
 
 /*
@@ -87,7 +99,6 @@ function onLocationFound(e) {
 	function onLocationError(msg) {
 		$("#loading_messages").html("Location couldn't be retrieved. Did you give permission?");
 		console.log(msg);
-		
 	}
 
 	function getLocation() {
@@ -98,37 +109,83 @@ function onLocationFound(e) {
 	
 function showResults() {
 	console.log("Entering showResults()");
-	console.log("Downloading: https://www.googleapis.com/fusiontables/v1/query?sql=SELECT * FROM " + table + " ORDER BY ST_DISTANCE(latitude, LATLNG(" + lat + "," + lng + ")) LIMIT 10&key=AIzaSyCSjvPQXDkjxppQfiaiPFfl0HwprmUndKM&typed=false");
-	$.getJSON("https://www.googleapis.com/fusiontables/v1/query?sql=SELECT * FROM " + table + " ORDER BY ST_DISTANCE(latitude, LATLNG(" + lat + "," + lng + ")) LIMIT 10&key=AIzaSyCSjvPQXDkjxppQfiaiPFfl0HwprmUndKM&typed=false")
-	.done(function(result) {
-		$("#loading_messages").html("Found nearby centers...");
-    	console.log(result);
-    	var print ="";
-        /* Callback function. */
-        //alert(typeof result);
-        $('#list').slideDown();
-        $('#list_results').html('');
-
-        $.each(result.rows, function(i, row) {
-        	//console.log(row);
-	        $('#list_results').append('<li data-filtertext=""><a href="javascript:zoomToMarker(marker[' + i + ']);"><h3>' + row[0] + '</h3><p>' + row[8] + '</p></a></li>');
-	        
-	        marker[i] = L.marker([row[14],row[15]],{title:row[0]});
-	        marker[i].bindPopup(row[0]);
-	        markers.addLayer(marker[i]);
-	        bounds.extend([row[14],row[15]]);
-	        
-        });
-        //$('#list_blocks').html(print);
-        $("#list_results").listview ("refresh");
-        $("#loading_messages").html("")
-        map.addLayer(markers);
-        map.fitBounds(bounds);
-    })
-    .fail(function() {
-	    $("#loading_messages").html("There was an issue loading nearby centers");
-	    console.log("showResults(): Problem loading the Fusion Table");
+	map.removeLayer(markers);
+	
+	var query = "https://www.googleapis.com/fusiontables/v1/query?sql=SELECT * FROM " + table + " ORDER BY ST_DISTANCE(latitude, LATLNG(" + lat + "," + lng + ")) LIMIT " + limit + "&key=AIzaSyCSjvPQXDkjxppQfiaiPFfl0HwprmUndKM&typed=false";
+	
+	radius = radius_miles*1609.34;
+	//var query = "https://www.googleapis.com/fusiontables/v1/query?sql=SELECT * FROM " + table + " WHERE ST_INTERSECTS(latitude, CIRCLE(LATLNG(" + lat + ", " + lng + "), " + radius + ")) LIMIT " + limit + "&key=AIzaSyCSjvPQXDkjxppQfiaiPFfl0HwprmUndKM&typed=false";
+	// Google: There can at most be one spatial condition or \"order by distance\" condition"
+	
+	console.log("Downloading: " + query);
+	
+	$.getJSON(query)
+		.done(function(result) {
+			results = result;
+			$("#loading_messages").html("Found nearby centers...");
+	    	console.log(result);
+	    	var print ="";
+	        /* Callback function. */
+	        //alert(typeof result);
+	        $('#list').slideDown();
+	        $('#list_results').html('');
+	
+	        $.each(result.rows, function(i, row) {
+	        	//console.log(row);
+		        $('#list_results').append('<li data-filtertext=""><a href="javascript:zoomToMarker(marker[' + i + ']);"><h3>' + row[0] + '</h3><p>' + row[2] + ', ' + row[3] + '<p>' + row[8] + '</p></a></li>');
+		        
+		        popup = '<b><a href="javascript:showCenterInfo(' + i + ');">' + row[0] + '</a></b><br />' + row[2] + ', ' + row[3] + '<br/ >' + row[8];
+		        
+		        marker[i] = L.marker([row[14],row[15]],{title:row[0]});
+		        marker[i].bindPopup(popup);
+		        markers.addLayer(marker[i]);
+		        bounds.extend([row[14],row[15]]);
+		        
+	        });
+	        //$('#list_blocks').html(print);
+	        $("#list_results").listview ("refresh");
+	        $("#loading_messages").html("")
+	        $("#resultListTitle").html(result.rows.length + " centers near you - <a href='javascript:increaseDistance();'>find more</a>");
+	        map.addLayer(markers);
+	        map.fitBounds(bounds);
+	    })
+	    .fail(function() {
+		    $("#loading_messages").html("There was an issue loading nearby centers");
+		    console.log("showResults(): Problem loading the Fusion Table");
     }); // end getJSON
+}
+
+function increaseDistance() {
+	markers.clearLayers();
+	radius_miles = 100;
+	limit = limit + 5;
+	
+	showResults();
+}
+
+function showCenterInfo(id) {
+	console.log(results.rows[id]);
+	
+	var row = results.rows[id];
+	
+	var bc = "<h3>" + row[0] + "</h3>";
+	bc += "<p>" + row[1] + "<br />" + row[2] + ", " + row[3] + "</p>";
+	bc += "<p>" + row[11] + "</p>";
+	bc += "<p>" + row[9] + "</p>";
+	
+	if(row[12] != undefined) {
+		$('#singleResultWebsite').show();
+		$('#singleResultWebsite a').attr("href",row[12]);
+	}
+	
+	$('#resultsBox').hide();
+	$('#singleResultBox').show();
+	$('#singleResult').html(bc);
+}
+
+function goBack() {
+	$('#singleResultBox').hide();
+	$('#resultsBox').show();
 }
 
 function zoomToMarker(layer) {
@@ -149,33 +206,33 @@ function zoomToMarker(layer) {
 	<div data-role="content">
 
 <!--    <h1>Permaculture and Appropriate Technology</h1> -->
-  <h3>Who's doing Permaculture and Appropriate Technology?</h3>
+	<div id='singleResultBox' style='display:none;'>
+		<p><a href='javascript:goBack();'><< go back</a></p>
+		<div id='singleResult'></div>
+		<p id='singleResultWebsite' style='display:none;'><a href=''>Website</a></p>
+	</div>
+	<div id='resultsBox'>
+  <h3 id='resultListTitle'>Who's doing Permaculture and Appropriate Technology?</h3>
 	<div id="loading_messages"></div>
 	<div id='list'>
-   <ul data-role="listview" data-inset="true" id="list_results">
-   </ul>
-   <div id='list_blocks'></div>
+	   <ul data-role="listview" data-inset="true" id="list_results">
+	   </ul>
+	   <div id='list_blocks'></div>
    </div>
+	</div><!-- resultsBox -->
 
-   <h2>Info</h2>
+   <h2>What is this?</h2>
    		<div data-role="collapsible" data-collapsed="true" data-inset="false" id="" class="">
 			<h2>What is Permaculture?</h2>
-			<p>The Chicago Bike Guide was created by Steven Vance, a transportation planner and programmer in Chicago, Illinois, with the intention to carry a digital bike map without the need for an internet connection (some features may require an internet connection). All of the map tiles are stored on the iOS device.</p>
-			<h3>Version</h3>
-				<p>Latest app version is 0.8.3, September 20, 2013. Versions for data is under Attribution below.</p>
-			<h3>Notes</h3>
-			<ul class='list'>
-				<li>Not all bike lanes marked in the map may be present or visible on the road because they've worn or the streets have been repaved recently. Some bike lanes exist only in one direction on a two-lane road; every attempt has been made to style these differently.</li>
-				<li>Train station markers most likely do not indicate the station entrances.</li>
-			</ul>
+			<p>Permaculture is an establishment of perennials and trees and shrubs that produce food and create habitats for helpful birds and insects, outputting more food than monoculture farming without the use of chemicals and fertilizers.</p>
 		</div>
 		<div data-role="collapsible" data-collapsed="true" data-inset="false" id="" class="">
 			<h2>What is Appropriate Technology?</h2>
-			<p>The app was created with the following tools:</p>
+			<p>Appropriate Technology is a technological application that is people-centered, small-scale, decentralized, labor-intensive, energy-efficient, environmentally sound, and locally controlled.</p>
 		</div>
 		<div data-role="collapsible" data-collapsed="true" data-inset="false" id="" class="">
 			<h2>Living Building Challenge</h2>
-			<p>The app was created with the following tools:</p>
+			<p>Text</p>
 		</div><!-- // collapsible -->
 	</div>
   </div>
