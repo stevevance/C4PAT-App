@@ -133,7 +133,7 @@ function showResults() {
 	
 	        $.each(result.rows, function(i, row) {
 	        	//console.log(row);
-		        $('#list_results').append('<li data-filtertext=""><a href="javascript:zoomToMarker(marker[' + i + ']);"><h3>' + row[0] + '</h3><p>' + row[2] + ', ' + row[3] + '<p>' + row[8] + '</p></a></li>');
+		        $('#list_results').append('<li data-filtertext="" data-icon="info" data-iconpos="none"><a href="javascript:zoomToMarker(marker[' + i + ']);"><h3>' + row[0] + '</h3><p>' + row[2] + ', ' + row[3] + '<p>' + row[8] + '</p></a></li>');
 		        
 		        popup = '<b><a href="javascript:showCenterInfo(' + i + ');">' + row[0] + '</a></b><br />' + row[2] + ', ' + row[3] + '<br/ >' + row[8];
 		        
@@ -146,7 +146,9 @@ function showResults() {
 	        //$('#list_blocks').html(print);
 	        $("#list_results").listview ("refresh");
 	        $("#loading_messages").html("")
-	        $("#resultListTitle").html(result.rows.length + " centers near you - <a href='javascript:increaseDistance();'>find more</a>");
+	        //$("#resultListText").hide();
+	        $("#resultListText").html(result.rows.length + " centers near you");
+	        $("#resultListLink").show();
 	        map.addLayer(markers);
 	        map.fitBounds(bounds);
 	    })
@@ -214,7 +216,10 @@ function zoomToMarker(layer) {
 		<p id='singleResultWebsite' style='display:none;'><a href=''>Website</a></p>
 	</div>
 	<div id='resultsBox'>
-  <h3 id='resultListTitle'>Who's doing Permaculture and Appropriate Technology?</h3>
+  <h3 id='resultListTitle'>
+  	<span id='resultListText'>Who's doing Permaculture and Appropriate Technology?</span>
+  	<span id='resultListLink' style='display:none;'> - <a href='javascript:increaseDistance();'>find more</a></span>
+  	</h3>
 	<div id="loading_messages"></div>
 	<div id='list'>
 	   <ul data-role="listview" data-inset="true" id="list_results">
